@@ -1,0 +1,75 @@
+/* SafeSurf AI v5 – Injected content styles */
+[data-ss4="1"] { transition: outline-color 0.3s ease !important; }
+
+/* ─ Floating Risk Badge ─────────────────────────── */
+#__ss5-badge {
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 20px !important;
+  z-index: 2147483640 !important;
+  min-width: 54px !important;
+  padding: 10px 16px !important;
+  border-radius: 16px !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #fff !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.08) inset !important;
+  transition: all 0.4s cubic-bezier(.4,0,.2,1) !important;
+  animation: __ss5badgeIn 0.5s cubic-bezier(.34,1.56,.64,1) !important;
+  user-select: none !important;
+  line-height: 1 !important;
+}
+#__ss5-badge:hover {
+  transform: translateY(-3px) scale(1.04) !important;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.12) inset !important;
+}
+#__ss5-badge.safe { background: rgba(22,163,74,0.88) !important; }
+#__ss5-badge.warning { background: rgba(217,119,6,0.88) !important; }
+#__ss5-badge.danger { background: rgba(220,38,38,0.88) !important; animation: __ss5badgeIn 0.5s cubic-bezier(.34,1.56,.64,1), __ss5dangerPulse 2s ease-in-out infinite 0.5s !important; }
+#__ss5-badge .badge-score { font-family: 'SF Mono', 'JetBrains Mono', monospace !important; font-size: 16px !important; font-weight: 800 !important; }
+#__ss5-badge .badge-text { font-size: 11px !important; opacity: 0.9 !important; }
+#__ss5-badge .badge-shield { font-size: 18px !important; }
+
+@keyframes __ss5badgeIn { from { opacity: 0; transform: translateY(20px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes __ss5dangerPulse { 0%,100% { box-shadow: 0 8px 32px rgba(220,38,38,0.3), 0 0 0 1px rgba(255,255,255,0.08) inset; } 50% { box-shadow: 0 8px 32px rgba(220,38,38,0.6), 0 0 20px rgba(220,38,38,0.3), 0 0 0 1px rgba(255,255,255,0.08) inset; } }
+
+/* ─ Blocked form inputs ─────────────────────────── */
+[data-ss5-blocked="1"] {
+  opacity: 0.4 !important;
+  pointer-events: none !important;
+  position: relative !important;
+  filter: grayscale(0.6) !important;
+}
+[data-ss5-blocked="1"]::after {
+  content: '🔒 Blocked by SafeSurf' !important;
+  position: absolute !important;
+  top: 50% !important; left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  font-size: 11px !important;
+  color: #ef4444 !important;
+  font-weight: 700 !important;
+  pointer-events: none !important;
+}
+
+/* ─ Safe preview mode ───────────────────────────── */
+body.__ss5-safe-preview {
+  filter: grayscale(0.85) contrast(0.7) !important;
+}
+body.__ss5-safe-preview a,
+body.__ss5-safe-preview button,
+body.__ss5-safe-preview input,
+body.__ss5-safe-preview [onclick] {
+  pointer-events: none !important;
+  cursor: not-allowed !important;
+}
+body.__ss5-safe-preview form {
+  outline: 3px dashed #ef4444 !important;
+  outline-offset: 4px !important;
+}

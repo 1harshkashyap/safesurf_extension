@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SafeSurf AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#080d14;--surf:#0f1923;--surf2:#162032;
+      --border:rgba(255,255,255,0.07);--bord2:rgba(255,255,255,0.13);
+      --text:#e2ecf5;--muted:#5a7a96;--accent:#38bdf8;
+      --safe:#22c55e;--warn:#f59e0b;--danger:#ef4444;
+    }
+    html{width:400px}
+    body{font-family:'Space Grotesk',-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:13px;line-height:1.5;overflow-x:hidden}
+    ::-webkit-scrollbar{width:3px}
+    ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px}
+
+    /* ─ Header ─────────────────────────────────── */
+    .hdr{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--surf);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+    .brand{display:flex;align-items:center;gap:8px}
+    .b-icon{width:27px;height:27px;border-radius:7px;background:linear-gradient(135deg,#0ea5e9,#6366f1);display:flex;align-items:center;justify-content:center;font-size:14px}
+    .b-name{font-size:13px;font-weight:700;letter-spacing:-.3px}
+    .b-sub{font-size:9px;color:var(--muted)}
+    .hdr-acts{display:flex;gap:4px}
+    .ib{width:26px;height:26px;border-radius:7px;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+    .ib:hover{background:var(--surf2);color:var(--text)}
+
+    /* ─ Scan Status Bar (NEW) ───────────────────── */
+    .scan-bar{height:2px;background:var(--border);position:relative;overflow:hidden}
+    .scan-progress{position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:scanSlide 1.5s ease-in-out infinite;display:none}
+    .scan-progress.active{display:block}
+    @keyframes scanSlide{from{left:-100%}to{left:100%}}
+
+    /* ─ Scan Status Line ────────────────────────── */
+    .scan-status{display:none;align-items:center;gap:7px;padding:7px 14px;background:rgba(56,189,248,0.06);border-bottom:1px solid rgba(56,189,248,0.12);font-size:10px;color:var(--accent)}
+    .scan-status.show{display:flex}
+    .scan-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:blink 1s ease-in-out infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+    .scan-done{color:var(--safe);animation:none}
+    .scan-done .scan-dot{background:var(--safe);animation:none}
+
+    /* ─ Tabs ────────────────────────────────────── */
+    .tabs{display:flex;background:var(--surf);border-bottom:1px solid var(--border);padding:0 14px}
+    .tab{padding:9px 10px;cursor:pointer;font-size:11px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;user-select:none}
+    .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+    .tab:hover:not(.active){color:var(--text)}
+
+    /* ─ Pages ───────────────────────────────────── */
+    .page{display:none;padding:12px 14px;max-height:520px;overflow-y:auto}
+    .page.active{display:block}
+
+    /* ─ State wrappers ──────────────────────────── */
+    .sw{display:flex;flex-direction:column;align-items:center;padding:32px 16px;text-align:center;gap:8px}
+    .si{font-size:28px;opacity:.5}
+    .st{font-size:12px;color:var(--muted);line-height:1.5}
+    .spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* ─ Score Hero ──────────────────────────────── */
+    .hero{background:var(--surf);border:1px solid var(--border);border-radius:14px;padding:15px;margin-bottom:10px;position:relative;overflow:hidden}
+    .hero::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 80% 0%,var(--hg,rgba(56,189,248,0.07)) 0%,transparent 60%)}
+    .score-row{display:flex;align-items:center;gap:12px}
+    .ring{position:relative;width:74px;height:74px;flex-shrink:0}
+    .ring svg{transform:rotate(-90deg)}
+    .rt{fill:none;stroke:rgba(255,255,255,0.07);stroke-width:5}
+    .rf{fill:none;stroke-width:5;stroke-linecap:round;stroke-dasharray:201;stroke-dashoffset:201;transition:stroke-dashoffset 1s cubic-bezier(.4,0,.2,1),stroke .4s}
+    .rv{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+    .rn{font-family:'JetBrains Mono',monospace;font-size:19px;font-weight:700;line-height:1}
+    .rd{font-size:8px;color:var(--muted)}
+    .si2{flex:1;min-width:0}
+    .sl{font-size:16px;font-weight:800;letter-spacing:-.5px;margin-bottom:2px}
+    .sh{font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'JetBrains Mono',monospace;margin-bottom:6px}
+    .sbadges{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+    .lbadge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700}
+    .lbadge.safe{background:rgba(34,197,94,0.12);color:var(--safe)}
+    .lbadge.warning{background:rgba(245,158,11,0.12);color:var(--warn)}
+    .lbadge.danger{background:rgba(239,68,68,0.12);color:var(--danger)}
+    .cbadge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(56,189,248,0.1);color:var(--accent)}
+    .adpt{font-size:10px;color:#86efac;margin-top:4px;padding:4px 8px;background:rgba(34,197,94,0.08);border-radius:6px;display:none}
+    .adpt.show{display:block}
+
+    /* Confidence bar */
+    .cbar-row{margin-top:9px;display:flex;align-items:center;gap:7px}
+    .cbar-lbl{font-size:9px;color:var(--muted);width:70px;flex-shrink:0}
+    .cbar{flex:1;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden}
+    .cbar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,#38bdf8,#818cf8);width:0%;transition:width 1s ease}
+    .cbar-pct{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--accent);width:26px;text-align:right}
+
+    /* Breakdown bars */
+    .bds{display:flex;flex-direction:column;gap:5px;margin-top:12px}
+    .bd-row{display:flex;align-items:center;gap:7px;font-size:10px}
+    .bd-lbl{width:110px;color:var(--muted);flex-shrink:0}
+    .bd-bar{flex:1;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden}
+    .bd-fill{height:100%;border-radius:2px;width:0%;transition:width 1s ease}
+    .bd-val{width:18px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:9px}
+
+    /* ─ Trust Explanation (NEW) ─────────────────── */
+    .trust-card{background:var(--surf);border:1px solid var(--border);border-radius:11px;padding:12px;margin-bottom:10px}
+    .trust-hdr{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:9px}
+    .trust-cols{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .trust-col{}
+    .trust-col-lbl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
+    .trust-col-lbl.pos{color:var(--safe)}
+    .trust-col-lbl.neg{color:var(--danger)}
+    .trust-item{font-size:10px;color:var(--muted);margin-bottom:4px;line-height:1.4}
+
+    /* ─ Attack Simulation (NEW) ─────────────────── */
+    .sim-card{background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.2);border-radius:11px;margin-bottom:10px;overflow:hidden}
+    .sim-hdr{display:flex;align-items:center;justify-content:space-between;padding:11px 12px;cursor:pointer;user-select:none}
+    .sim-hdr-left{display:flex;align-items:center;gap:8px}
+    .sim-title{font-size:11px;font-weight:700;color:#a5b4fc}
+    .sim-sub{font-size:9px;color:var(--muted)}
+    .sim-toggle{font-size:12px;color:var(--muted);transition:transform .2s}
+    .sim-toggle.open{transform:rotate(180deg)}
+    .sim-body{display:none;padding:0 12px 12px;border-top:1px solid rgba(99,102,241,0.15)}
+    .sim-body.open{display:block}
+    .sim-attack{margin-top:10px;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px;border-left:3px solid var(--accent)}
+    .sim-attack.critical,.sim-attack.high{border-left-color:var(--danger)}
+    .sim-attack.medium{border-left-color:var(--warn)}
+    .sim-attack.none{border-left-color:var(--safe)}
+    .sim-atk-hdr{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+    .sim-atk-icon{font-size:16px}
+    .sim-atk-name{font-size:11px;font-weight:700;color:#c7d2fe}
+    .sim-atk-sev{font-size:8px;font-weight:700;padding:1px 6px;border-radius:10px}
+    .sim-atk-sev.critical,.sim-atk-sev.high{background:rgba(239,68,68,0.15);color:var(--danger)}
+    .sim-atk-sev.medium{background:rgba(245,158,11,0.15);color:var(--warn)}
+    .sim-atk-sev.none{background:rgba(34,197,94,0.12);color:var(--safe)}
+    .sim-what{font-size:11px;color:#94a3b8;margin-bottom:5px;line-height:1.5}
+    .sim-consequence{font-size:10px;color:#64748b;font-style:italic}
+    .sim-diff{font-size:9px;color:rgba(56,189,248,0.5);margin-top:4px}
+
+    /* ─ Fake Login Alert ────────────────────────── */
+    .fla{background:rgba(239,68,68,0.1);border:1.5px solid rgba(239,68,68,0.4);border-radius:11px;padding:12px;margin-bottom:10px;animation:fpulse 2.5s ease-in-out infinite}
+    @keyframes fpulse{0%,100%{border-color:rgba(239,68,68,0.4)}50%{border-color:rgba(239,68,68,0.85)}}
+    .fla-hdr{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+    .fla-title{font-size:13px;font-weight:800;color:#fca5a5}
+    .fla-sigs{display:flex;flex-direction:column;gap:3px}
+    .fla-sig{font-size:11px;color:#fca5a5;display:flex;align-items:flex-start;gap:5px}
+    .fla-sig::before{content:'•';flex-shrink:0}
+    .fla-tip{font-size:10px;color:var(--danger);margin-top:7px;font-weight:700}
+
+    /* ─ URL Risk ────────────────────────────────── */
+    .url-card{background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:11px;margin-bottom:10px}
+    .url-card.high{border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.05)}
+    .url-card.medium{border-color:rgba(245,158,11,0.25);background:rgba(245,158,11,0.04)}
+    .url-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+    .url-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted)}
+    .url-chip{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px}
+    .url-chip.high{background:rgba(239,68,68,0.15);color:var(--danger)}
+    .url-chip.medium{background:rgba(245,158,11,0.15);color:var(--warn)}
+    .url-chip.low{background:rgba(34,197,94,0.1);color:var(--safe)}
+    .url-host{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--accent);margin-bottom:7px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .url-sig{display:flex;align-items:flex-start;gap:5px;font-size:10px;margin-bottom:4px}
+    .url-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:3px}
+
+    /* ─ Phishing Intent ─────────────────────────── */
+    .intent{background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.2);border-radius:10px;padding:11px;margin-bottom:10px}
+    .intent-hdr{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+    .intent-title{font-size:11px;font-weight:700;color:#fcd34d}
+    .intent-words{display:flex;flex-wrap:wrap;gap:3px;margin-top:5px}
+    .iw{padding:2px 7px;border-radius:20px;font-size:9px;font-weight:700;background:rgba(245,158,11,0.15);color:var(--warn)}
+
+    /* ─ AI Summary ──────────────────────────────── */
+    .ai-card{background:rgba(56,189,248,0.05);border:1px solid rgba(56,189,248,0.14);border-radius:10px;padding:11px;margin-bottom:10px}
+    .ai-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--accent);margin-bottom:5px}
+    .ai-txt{font-size:11px;color:#94b4c8;line-height:1.65}
+
+    /* ─ Claude AI Badge ─────────────────────────── */
+    .claude-badge{display:none;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#7c3aed;letter-spacing:0.5px;background:rgba(124,58,237,0.08);border:1px solid rgba(124,58,237,0.2);border-radius:6px;padding:3px 8px;margin-top:4px;position:relative;overflow:hidden}
+    .claude-badge.show{display:inline-flex;animation:cbFade .5s ease}
+    @keyframes cbFade{from{opacity:0;transform:scale(0.9)}to{opacity:1;transform:scale(1)}}
+    .claude-badge::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(124,58,237,0.15),transparent);animation:cbShimmer 2s ease-in-out 1}
+    @keyframes cbShimmer{from{left:-100%}to{left:100%}}
+    .claude-extra{margin-top:8px;padding:9px;background:rgba(124,58,237,0.05);border:1px solid rgba(124,58,237,0.12);border-radius:8px;font-size:10px;color:#a78bfa;line-height:1.6}
+
+    /* ─ Section header ──────────────────────────── */
+    .sec{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:11px 0 7px;display:flex;align-items:center;gap:6px}
+    .sec::after{content:'';flex:1;height:1px;background:var(--border)}
+
+    /* ─ Risk items ──────────────────────────────── */
+    .ri{border-radius:9px;padding:9px 11px;margin-bottom:6px;border:1px solid transparent;cursor:pointer;transition:transform .15s}
+    .ri:hover{transform:translateX(2px)}
+    .ri.critical{background:rgba(239,68,68,0.12);border-color:rgba(239,68,68,0.35)}
+    .ri.high{background:rgba(239,68,68,0.07);border-color:rgba(239,68,68,0.17)}
+    .ri.medium{background:rgba(245,158,11,0.07);border-color:rgba(245,158,11,0.17)}
+    .ri.low{background:rgba(148,163,184,0.05);border-color:rgba(148,163,184,0.12)}
+    .ri.pass{background:rgba(34,197,94,0.05);border-color:rgba(34,197,94,0.13)}
+    .ri-hdr{display:flex;align-items:center;gap:7px;margin-bottom:3px}
+    .ri-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+    .critical .ri-dot,.high .ri-dot{background:var(--danger)}
+    .medium .ri-dot{background:var(--warn)}
+    .low .ri-dot{background:#94a3b8}
+    .pass .ri-dot{background:var(--safe)}
+    .ri-title{font-size:11px;font-weight:700;flex:1}
+    .critical .ri-title,.high .ri-title{color:#fca5a5}
+    .medium .ri-title{color:#fcd34d}
+    .low .ri-title{color:#94a3b8}
+    .pass .ri-title{color:#86efac}
+    .ri-detail{font-size:10px;color:var(--muted);line-height:1.5;margin-bottom:2px}
+    .ri-tip{font-size:9px;color:var(--accent)}
+    .ait{font-size:9px;color:var(--accent);cursor:pointer;margin-top:4px;display:inline-flex;align-items:center;gap:3px;opacity:.75;background:none;border:none;font-family:inherit;padding:0}
+    .ait:hover{opacity:1}
+    .aie{font-size:10px;color:#6b9bb8;line-height:1.6;margin-top:5px;display:none;border-top:1px solid rgba(255,255,255,0.05);padding-top:5px}
+    .aie.open{display:block}
+
+    /* ─ Forms tab ───────────────────────────────── */
+    .fc{background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:11px;margin-bottom:8px}
+    .fc.high{border-color:rgba(239,68,68,0.25)}
+    .fc.medium{border-color:rgba(245,158,11,0.2)}
+    .fc.low{border-color:rgba(34,197,94,0.15)}
+    .fc-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+    .fc-id{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--accent)}
+    .fc-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:7px}
+    .mi{background:rgba(255,255,255,0.04);border-radius:6px;padding:4px 7px}
+    .mk{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+    .mv{font-size:11px;font-weight:700;margin-top:1px}
+    .chips{display:flex;flex-wrap:wrap;gap:3px}
+    .chip{display:inline-flex;align-items:center;gap:2px;padding:2px 7px;border-radius:20px;font-size:9px;font-weight:700}
+    .chip.ok{background:rgba(34,197,94,0.1);color:var(--safe)}
+    .chip.warn{background:rgba(245,158,11,0.1);color:var(--warn)}
+    .chip.bad{background:rgba(239,68,68,0.1);color:var(--danger)}
+    .chip.info{background:rgba(56,189,248,0.1);color:var(--accent)}
+    .fc-act{margin-top:5px;font-size:9px;color:var(--muted);font-family:'JetBrains Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+    /* ─ History tab ─────────────────────────────── */
+    /* Today Timeline (NEW) */
+    .tl-card{background:var(--surf);border:1px solid var(--border);border-radius:12px;padding:13px;margin-bottom:10px}
+    .tl-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:9px}
+    .tl-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:9px}
+    .tl-cell{text-align:center}
+    .tl-num{font-size:18px;font-weight:800;font-family:'JetBrains Mono',monospace}
+    .tl-lbl{font-size:8px;color:var(--muted);margin-top:1px}
+    .tl-insight{background:rgba(56,189,248,0.05);border-radius:7px;padding:8px 9px;font-size:11px;color:#7fb4cc;line-height:1.5}
+    .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px}
+    .sc{background:var(--surf);border:1px solid var(--border);border-radius:9px;padding:9px;text-align:center}
+    .sn{font-size:19px;font-weight:800;font-family:'JetBrains Mono',monospace}
+    .sl2{font-size:9px;color:var(--muted);margin-top:1px}
+    .hi{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:9px;background:var(--surf);border:1px solid var(--border);margin-bottom:5px}
+    .hd{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .hd.safe{background:var(--safe)}.hd.warning{background:var(--warn)}.hd.danger{background:var(--danger)}
+    .hin{flex:1;min-width:0}
+    .hh{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .hm{font-size:9px;color:var(--muted);display:flex;align-items:center;gap:5px;margin-top:1px}
+    .htag{padding:1px 5px;border-radius:10px;font-size:8px;font-weight:700}
+    .htag.fake{background:rgba(239,68,68,0.15);color:var(--danger)}
+    .htag.phi{background:rgba(245,158,11,0.15);color:var(--warn)}
+    .htag.adp{background:rgba(34,197,94,0.12);color:var(--safe)}
+    .hscore{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:800}
+
+    /* ─ Learn tab ───────────────────────────────── */
+    .edu{background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px}
+    .ei{font-size:20px;margin-bottom:5px;display:block}
+    .et{font-size:12px;font-weight:700;margin-bottom:4px}
+    .eb{font-size:11px;color:var(--muted);line-height:1.65}
+
+    /* ─ Footer ──────────────────────────────────── */
+    .ftr{padding:8px 14px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surf)}
+    .fl{font-size:9px;color:var(--muted)}
+    .fr{display:flex;gap:5px}
+    .pb{padding:3px 9px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:9px;cursor:pointer;font-family:inherit;transition:all .15s}
+    .pb:hover{background:var(--surf2);color:var(--text)}
+    .pb.pri{background:rgba(56,189,248,0.1);color:var(--accent);border-color:rgba(56,189,248,0.25)}
+
+    /* ─ Animations ──────────────────────────────── */
+    @keyframes fu{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+    .page.active>*{animation:fu .25s ease both}
+    .page.active>*:nth-child(1){animation-delay:.02s}
+    .page.active>*:nth-child(2){animation-delay:.05s}
+    .page.active>*:nth-child(3){animation-delay:.08s}
+    .page.active>*:nth-child(4){animation-delay:.11s}
+    .page.active>*:nth-child(5){animation-delay:.14s}
+    .page.active>*:nth-child(6){animation-delay:.17s}
+    .page.active>*:nth-child(7){animation-delay:.20s}
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="hdr">
+  <div class="brand">
+    <div class="b-icon">🛡️</div>
+    <div>
+      <div class="b-name">SafeSurf AI</div>
+      <div class="b-sub">v4.0 · Intelligent Analysis</div>
+    </div>
+    <div id="claude-badge" class="claude-badge">
+      <span>⚡</span> CLAUDE AI ENRICHED
+    </div>
+  </div>
+  <div class="hdr-acts">
+    <button class="ib" id="btn-refresh" title="Re-analyse">↺</button>
+    <button class="ib" id="btn-report" title="Full report">⊞</button>
+  </div>
+</header>
+
+<!-- Scan progress bar -->
+<div class="scan-bar"><div class="scan-progress" id="scan-prog"></div></div>
+
+<!-- Scan status line -->
+<div class="scan-status" id="scan-status">
+  <div class="scan-dot" id="scan-dot"></div>
+  <span id="scan-status-text">Scanning page…</span>
+</div>
+
+<!-- Tabs -->
+<nav class="tabs">
+  <div class="tab active" data-tab="overview">Overview</div>
+  <div class="tab" data-tab="forms">Forms</div>
+  <div class="tab" data-tab="history">History</div>
+  <div class="tab" data-tab="learn">Learn</div>
+</nav>
+
+<!-- Overview -->
+<div class="page active" id="tab-overview">
+  <div class="sw" id="ov-load"><div class="spinner"></div><div class="st">Analysing page security…</div></div>
+  <div id="ov-content" style="display:none"></div>
+</div>
+
+<!-- Forms -->
+<div class="page" id="tab-forms">
+  <div class="sw" id="fm-load"><div class="spinner"></div><div class="st">Scanning forms…</div></div>
+  <div id="fm-content" style="display:none"></div>
+</div>
+
+<!-- History -->
+<div class="page" id="tab-history">
+  <div class="sw" id="hi-load"><div class="spinner"></div><div class="st">Loading history…</div></div>
+  <div id="hi-content" style="display:none"></div>
+</div>
+
+<!-- Learn -->
+<div class="page" id="tab-learn">
+  <div class="edu"><span class="ei">🚨</span><div class="et">Fake Login Pages — #1 Credential Threat</div><div class="eb">Attackers clone login pages of banks, email, and social networks pixel-by-pixel. SafeSurf v4 detects these by simultaneously analysing domain legitimacy, password fields, brand imagery, and login language — flagging what a URL check alone misses.</div></div>
+  <div class="edu"><span class="ei">🧬</span><div class="et">Adaptive Trust — SafeSurf Learns Your Behaviour</div><div class="eb">Every site you visit safely is remembered. After 2+ safe visits, SafeSurf increases trust confidence for that domain. After 10+ visits, it provides a significant trust boost. This is how the system becomes personalised to your browsing patterns over time.</div></div>
+  <div class="edu"><span class="ei">⚗️</span><div class="et">Attack Simulation — See the Actual Threat</div><div class="eb">SafeSurf's Attack Simulation panel shows exactly what would happen if a detected risk were exploited — what data could be stolen, what the consequences are, and how difficult the attack is. This makes abstract risks concrete and understandable.</div></div>
+  <div class="edu"><span class="ei">🧠</span><div class="et">Phishing Intent — Beyond Keywords</div><div class="eb">SafeSurf analyses WHERE pressure language appears. Urgency words in an H1 heading carry 4× more weight than body text. Action buttons carry 3× weight. This prevents false positives on legitimate sites that happen to use words like "urgent" in a news article.</div></div>
+  <div class="edu"><span class="ei">🔗</span><div class="et">URL Anatomy — Reading the Real Domain</div><div class="eb">In "paypal.secure-verify.com" the actual domain is "secure-verify.com" — not PayPal. The real domain is always the part immediately before the TLD (.com/.net/etc.). Attackers exploit the fact that users scan URLs from left to right and stop at the first familiar word.</div></div>
+  <div class="edu"><span class="ei">🔬</span><div class="et">Smart False Positive Filtering</div><div class="eb">SafeSurf v4 distinguishes between dangerous forms and benign ones. Search forms, GET-method forms, and forms on trusted domains are automatically classified as low-risk, even if they lack CSRF tokens. Only POST forms collecting sensitive data on unverified domains trigger warnings.</div></div>
+</div>
+
+<!-- Footer -->
+<footer class="ftr">
+  <span class="fl">Powered by Claude AI · Anthropic</span>
+  <div class="fr">
+    <button class="pb" id="btn-phish">Report Site</button>
+    <button class="pb pri" id="btn-details">Full Report ↗</button>
+  </div>
+</footer>
+
+<script src="popup.js"></script>
+</body>
+</html>

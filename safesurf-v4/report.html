@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SafeSurf AI – Security Report</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#060c14;--surf:#0c1523;--surf2:#111e2e;--border:rgba(255,255,255,0.08);--text:#ddeeff;--muted:#4a6a86;--accent:#38bdf8;--safe:#22c55e;--warn:#f59e0b;--danger:#ef4444}
+    body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(56,189,248,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,0.02) 1px,transparent 1px);background-size:55px 55px}
+    .w{max-width:880px;margin:0 auto;padding:30px 22px 60px;position:relative;z-index:1}
+    .nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+    .nb{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700}
+    .ni{width:29px;height:29px;border-radius:7px;background:linear-gradient(135deg,#0ea5e9,#6366f1);display:flex;align-items:center;justify-content:center;font-size:14px}
+    .nc{padding:7px 15px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:inherit;font-size:12px;cursor:pointer;transition:all .15s}
+    .nc:hover{background:var(--surf);color:var(--text)}
+    .na{display:flex;align-items:center;gap:7px}
+    .nc.pri{border-color:rgba(56,189,248,0.3);color:#7dd3fc;background:rgba(56,189,248,0.08)}
+    .rh{background:var(--surf);border:1px solid var(--border);border-radius:18px;padding:24px 28px;margin-bottom:16px;display:flex;align-items:center;gap:20px;position:relative;overflow:hidden}
+    .rh::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 90% 50%,var(--hg,transparent) 0%,transparent 60%)}
+    .bs{font-family:'JetBrains Mono',monospace;font-size:72px;font-weight:800;line-height:1;flex-shrink:0}
+    .rm h1{font-size:21px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px}
+    .rm .host{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);margin-bottom:8px;word-break:break-all}
+    .bds-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+    .badge{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:20px;font-size:11px;font-weight:700}
+    .badge.safe{background:rgba(34,197,94,0.12);color:var(--safe)}
+    .badge.warning{background:rgba(245,158,11,0.12);color:var(--warn)}
+    .badge.danger{background:rgba(239,68,68,0.12);color:var(--danger)}
+    .badge.conf{background:rgba(56,189,248,0.1);color:var(--accent)}
+    .badge.fake{background:rgba(239,68,68,0.2);color:var(--danger);border:1px solid rgba(239,68,68,0.4)}
+    .ts{font-size:11px;color:var(--muted)}
+    .ai-box{background:rgba(56,189,248,0.05);border:1px solid rgba(56,189,248,0.14);border-radius:13px;padding:15px 17px;margin-bottom:16px}
+    .ai-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:6px}
+    .ai-txt{font-size:13px;color:#94b4c8;line-height:1.7}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+    .sbc{background:var(--surf);border:1px solid var(--border);border-radius:11px;padding:12px 14px}
+    .sbc-l{font-size:10px;font-weight:600;color:var(--muted);margin-bottom:7px}
+    .sbc-b{height:5px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;margin-bottom:5px}
+    .sbc-f{height:100%;border-radius:3px;transition:width 1s ease}
+    .sbc-r{display:flex;align-items:center;justify-content:space-between}
+    .sbc-v{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700}
+    .sbc-t{font-size:10px;color:var(--muted)}
+    .sh{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:20px 0 9px;display:flex;align-items:center;gap:8px}
+    .sh::after{content:'';flex:1;height:1px;background:var(--border)}
+    .ic{background:var(--surf);border:1px solid var(--border);border-radius:11px;padding:12px 14px;margin-bottom:8px}
+    .ih{display:flex;align-items:flex-start;gap:8px;margin-bottom:5px}
+    .id2{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:3px}
+    .it{font-size:13px;font-weight:700;flex:1}
+    .sv{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px}
+    .sv.critical,.sv.high{background:rgba(239,68,68,0.15);color:var(--danger)}
+    .sv.medium{background:rgba(245,158,11,0.15);color:var(--warn)}
+    .sv.low{background:rgba(148,163,184,0.1);color:#94a3b8}
+    .idet{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:4px}
+    .itip{font-size:11px;color:var(--accent)}
+    .iai{font-size:11px;color:#5d8aa0;line-height:1.65;margin-top:6px;padding-top:6px;border-top:1px solid var(--border)}
+    .icf{font-size:9px;color:rgba(56,189,248,0.4);font-family:'JetBrains Mono',monospace;margin-top:3px}
+    /* Trust explanation */
+    .te-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+    .te-card{background:var(--surf);border:1px solid var(--border);border-radius:11px;padding:12px 14px}
+    .te-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
+    .te-lbl.pos{color:var(--safe)} .te-lbl.neg{color:var(--danger)}
+    .te-item{font-size:11px;color:var(--muted);margin-bottom:5px;line-height:1.45}
+    /* Attack sim */
+    .as-grid{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+    .as-card{background:var(--surf);border:1px solid var(--border);border-radius:11px;padding:13px 15px}
+    .as-card.critical,.as-card.high{border-color:rgba(239,68,68,0.25);background:rgba(239,68,68,0.04)}
+    .as-card.medium{border-color:rgba(245,158,11,0.2)}
+    .as-card.none{border-color:rgba(34,197,94,0.2)}
+    .as-hdr{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+    .as-icon{font-size:20px}
+    .as-name{font-size:13px;font-weight:700}
+    .as-sev{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px}
+    .as-sev.critical,.as-sev.high{background:rgba(239,68,68,0.15);color:var(--danger)}
+    .as-sev.medium{background:rgba(245,158,11,0.15);color:var(--warn)}
+    .as-sev.none{background:rgba(34,197,94,0.12);color:var(--safe)}
+    .as-what{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:5px}
+    .as-stolen{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+    .as-item{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(239,68,68,0.1);color:var(--danger)}
+    .as-cons{font-size:11px;color:#64748b;font-style:italic}
+    .as-diff{font-size:10px;color:rgba(56,189,248,0.45);margin-top:4px}
+    /* Forms */
+    .fr-row{display:flex;align-items:flex-start;gap:10px;background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:11px 13px;margin-bottom:7px}
+    .fi{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px}
+    .fn{flex:1;min-width:0}
+    .fid{font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--accent)}
+    .fm2{font-size:11px;color:var(--muted);margin:2px 0 5px}
+    .fc2{display:flex;flex-wrap:wrap;gap:3px}
+    .fch{display:inline-flex;align-items:center;gap:2px;padding:2px 7px;border-radius:20px;font-size:9px;font-weight:700}
+    .fch.ok{background:rgba(34,197,94,0.1);color:var(--safe)}
+    .fch.warn{background:rgba(245,158,11,0.1);color:var(--warn)}
+    .fch.bad{background:rgba(239,68,68,0.1);color:var(--danger)}
+    .fch.info{background:rgba(56,189,248,0.1);color:var(--accent)}
+    /* Info grid */
+    .ig{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+    .ig-c{background:var(--surf2);border-radius:8px;padding:8px 10px}
+    .ig-k{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+    .ig-v{font-size:12px;word-break:break-all}
+    /* Disclaimer */
+    .dis{margin-top:26px;padding:13px 17px;background:rgba(56,189,248,0.04);border:1px solid rgba(56,189,248,0.13);border-radius:11px;font-size:11px;color:var(--muted);text-align:center;line-height:1.7}
+    @media(max-width:600px){.grid2,.te-grid,.ig{grid-template-columns:1fr}.rh{flex-direction:column;padding:18px}.bs{font-size:52px}}
+  </style>
+</head>
+<body>
+  <div class="w">
+    <div class="nav">
+      <div class="nb"><div class="ni">🛡️</div>SafeSurf AI – Security Report</div>
+      <div class="na">
+        <button class="nc" id="btn-copy-report">📋 Copy Summary</button>
+        <button class="nc pri" id="btn-export-report">⬇ Export JSON</button>
+        <button class="nc" onclick="window.close()">✕ Close</button>
+      </div>
+    </div>
+    <div id="root"><div style="text-align:center;padding:60px;color:#4a6a86"><div style="font-size:32px;margin-bottom:12px">⏳</div><div>Loading report…</div></div></div>
+    <div class="dis">⚠️ <strong style="color:#ddeeff">Disclaimer:</strong> SafeSurf AI performs <strong style="color:#ddeeff">passive, non-intrusive security analysis</strong> for educational purposes. It does not exploit vulnerabilities, transmit your personal data, or replace professional security advice.</div>
+  </div>
+  <script src="report.js"></script>
+</body>
+</html>
